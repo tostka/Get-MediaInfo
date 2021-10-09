@@ -457,7 +457,9 @@ function Get-MediaInfoSummary
         [Parameter(ParameterSetName='Full',HelpMessage="Switch to show a extended summary.[-Full]")]
         [Switch]$Full,
         [Parameter(ParameterSetName='Raw',HelpMessage="Switch to show not the friendly parameter names but rather the names as they are used in the MediaInfo API.[-Raw]")]
-        [Switch]$Raw
+        [Switch]$Raw,
+        [Parameter(ParameterSetName='Raw',HelpMessage="Switch to return object containing parsed version of the raw data output.[-RawParsed]")]
+        [Switch]$RawParsed
     )
     Begin
     {
@@ -472,5 +474,114 @@ function Get-MediaInfoSummary
     }
 }
 #*------^ END Function Get-MediaInfoSummary  ^------
+
+#*------v Function Get-MediaInfoRAW v------
+function Get-MediaInfoRAW
+{
+    <#
+    .SYNOPSIS
+    Get-MediaInfoRAW - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
+    .NOTES
+    Version     : 1.0.0
+    Author      : Frank Skare (stax76)
+    Website     : https://stax76.github.io/frankskare/
+    Twitter     : 
+    CreatedDate : 2021-10-07
+    FileName    : 
+    License     : (none asserted)
+    Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
+    Github      : https://github.com/tostka/verb-XXX
+    Tags        : Powershell
+    AddedCredit : Todd Kadrie
+    AddedWebsite: http://www.toddomation.com
+    AddedTwitter: @tostka / http://twitter.com/tostka
+    REVISIONS
+    * 3:00 PM 10/9/2021 TK:variant of Get-MediaInfoSummary() that returns the full set of raw MediaInfo.dll properties, as an object.  
+    *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
+    *3.7 7/31/21 - stax76's posted rev
+    .DESCRIPTION
+    Get-MediaInfoRAW - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
+    Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset. 
+    So this function parses out the -RAW text returned, into a nested General|Video|Audio object
+    .PARAMETER Path
+    Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
+    .PARAMETER fixNames
+    Switch to replace spaces and forward-slashes in default MediaInfo property names, with underscores (default's True)
+    .INPUT
+    Path as string to a media file. Can also be passed via pipeline.
+    .OUTPUT
+    System.Object
+    .EXAMPLE
+    PS> $data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ; 
+    Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
+    .LINK
+    https://github.com/stax76/Get-MediaInfo   
+    .LINK
+    https://github.com/tostka/Get-MediaInfo
+    #>
+    [CmdletBinding(DefaultParameterSetName='Full')]
+    [Alias('gmis')]
+    Param(
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]        
+        [ValidateScript({Test-Path $_})]
+        [string] $Path,
+        [Parameter(ParameterSetName='Full',HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores (default's True).[-fixNames]")]
+        [Switch]$fixNames = $true
+    )
+    Begin
+    {
+        Add-Type -Path ($PSScriptRoot + '\MediaInfoSharp.dll')
+        $rgxKeyValue = '(.*)\s+:\s(.*)' ; 
+        $rgxRegion = '^(\w*)$' ; 
+
+    }
+    Process
+    {
+        $mi = New-Object MediaInfoSharp -ArgumentList (Convert-Path -LiteralPath $Path) ; 
+        #$Raw -eq $true}
+        #$value = $mi.GetSummary($Full, $Raw)
+        $value = $mi.GetSummary($false, $true) ; 
+        $mi.Dispose() ; 
+        $region = $null ; 
+        $objRaw = [ordered]@{
+            General  = [ordered]@{} ;
+            Video  = [ordered]@{} ;
+            Audio  = [ordered]@{} ;
+        } ; 
+        $lines = $value.Split([Environment]::NewLine) ; 
+        foreach($line in $lines){
+            if($line.Length -eq 0){
+                Continue ;
+            }else{
+                switch -Regex ($line){
+                    $rgxRegion {
+                        $region = $matches[0] ;
+                        write-verbose "(region:$($region))" ; 
+                    } 
+                    $rgxKeyValue {
+                        $key,$value = ($line-split $rgxKeyValue).Trim()|?{$_} ;
+                        if($fixNames){$key= $key -replace '(\s|\/)','_' } ; 
+                        #write-verbose "key:$($key)`nvalue:$(($value|out-string).trim())" ; 
+                        switch ($region){
+                            'General' {
+                                $objRaw.General.add($key,$value) ;
+                            } 
+                            'Video' {
+                                $objRaw.Video.add($key,$value) ; 
+                            } 
+                            'Audio' {
+                                $objRaw.Audio.add($key,$value) ; 
+                            } ; 
+                        } ; 
+                    } 
+                } ; 
+            } ; 
+            #write-verbose "Hash status:`n$(($objRaw|out-string).trim())" ; 
+        } ;
+        #write-verbose "Hash created:`n$(($objRaw|out-string).trim())" ; 
+        New-Object PSObject -Property $objRaw | write-output ;             
+    }
+}
+#*------^ END Function Get-MediaInfoRAW  ^------
 
 Export-ModuleMember -Function 'get-*' ; 
