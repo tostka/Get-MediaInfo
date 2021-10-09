@@ -58,19 +58,6 @@ $script:culture         = [Globalization.CultureInfo]::InvariantCulture
 
 function _convertStringToInt($value)
 {
-    <#
-    .SYNOPSIS
-    _convertStringToInt - Coerce a string to integer
-    .NOTES
-    REVISIONS
-    8:28 PM 10/8/2021 ren'd with _ prefix (tag as private); added min CBH for pester passage
-    .DESCRIPTION
-    _convertStringToInt - Coerce a string to integer
-    .PARAMETER  value
-    String value to be coerced to integer
-    .EXAMPLE
-    PS> _convertStringToInt "1"
-    #>
     try {
         [int]::Parse($value, $culture)
     } catch {
@@ -80,19 +67,6 @@ function _convertStringToInt($value)
 
 function _convertStringToDouble($value)
 {
-    <#
-    .SYNOPSIS
-    _convertStringToDouble - Coerce a string to double
-    .NOTES
-    REVISIONS
-    8:28 PM 10/8/2021 ren'd with _ prefix (tag as private); added min CBH for pester passage
-    .DESCRIPTION
-    _convertStringToDouble - Coerce a string to double
-    .PARAMETER  value
-    String value to be coerced to double
-    .EXAMPLE
-    PS> _convertStringToDouble "4940656458"
-    #>
     try {
         [double]::Parse($value, $culture)
     } catch {
@@ -102,19 +76,6 @@ function _convertStringToDouble($value)
 
 function _convertStringToLong($value)
 {
-    <#
-    .SYNOPSIS
-    _convertStringToLong - Coerce a string to long
-    .NOTES
-    REVISIONS
-    8:28 PM 10/8/2021 ren'd with _ prefix (tag as private); added min CBH for pester passage
-    .DESCRIPTION
-    _convertStringToLong - Coerce a string to long
-    .PARAMETER  value
-    String value to be coerced to long
-    .EXAMPLE
-    PS> _convertStringToLong "-9,223,372,036,854,775,808"
-    #>
     try {
         [long]::Parse($value, $culture)
     } catch {
@@ -306,9 +267,9 @@ function Get-MediaInfoValue
 {
     <#
     .SYNOPSIS
-    Get-MediaInfoValue - Returns specific properties from media files.
+    Get-MediaInfoValue.ps1 - Returns specific properties from media files.
     .NOTES
-    Version     : 1.0.0
+    Version     : 3.7.2.0
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
     Twitter     : 
@@ -325,8 +286,8 @@ function Get-MediaInfoValue
     *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
     *3.7 7/31/21 - stax76's posted rev
     .DESCRIPTION
-    Get-MediaInfoValue - Returns specific properties from media files.
-    .PARAMETER Path
+    Get-MediaInfoValue.ps1 - Returns specific properties from media files.
+    .PARAMETER  Path
     Path to a media file.[-Path D:\path-to\video.ext]
     .PARAMETER Kind
     A MediaInfo kind (General|Video|Audio|Text|Image|Menu).[-Kind Video]
@@ -338,11 +299,6 @@ function Get-MediaInfoValue
     The property names can be seen with MediaInfo.NET with following setting enabled:
     Show parameter names as they are used in the MediaInfo API
     They can also be seen with Get-MediaInfoSummary with the -Raw flag enabled.
-    .INPUT
-    Input can be defined with the Path parameter, pipe input supports a path as string or a FileInfo object.
-    .OUTPUT
-    System.String
-    Output will always be of type string and must be cast to other types like integer if necessary.
     .EXAMPLE
     PS> Get-MediaInfoValue '.\Meg Myers - Desire (Hucci Remix).mp3' -Kind General -Parameter Performer
         output: 
@@ -410,9 +366,9 @@ function Get-MediaInfoSummary
 {
     <#
     .SYNOPSIS
-    Get-MediaInfoSummary - Shows a summary in text format for a media file.
+    Get-MediaInfoSummary.ps1 -  - Shows a summary in text format for a media file.
     .NOTES
-    Version     : 1.0.0
+    Version     : 3.7.2.0
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
     Twitter     : 
@@ -429,17 +385,13 @@ function Get-MediaInfoSummary
     *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
     *3.7 7/31/21 - stax76's posted rev
     .DESCRIPTION
-    Get-MediaInfoSummary - Shows a summary in text format for a media file.
+    Get-MediaInfoSummary.ps1 -  - Shows a summary in text format for a media file.
     .PARAMETER Path
     Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
     .PARAMETER Full
     Switch to show a extended summary.[-Full]
     .PARAMETER Raw
     Switch to show not the friendly parameter names but rather the names as they are used in the MediaInfo API.[-Raw]
-    .INPUT
-    Path as string to a media file. Can also be passed via pipeline.
-    .OUTPUT
-    A summary line by line as string array.
     .EXAMPLE
     PS> Get-MediaInfoSummary 'D:\Samples\Downton Abbey.mkv'
     Output the default Full media summary for the specified video.
@@ -480,12 +432,11 @@ function Get-MediaInfoRAW
 {
     <#
     .SYNOPSIS
-    Get-MediaInfoRAW - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
+    Get-MediaInfoRAW.ps1 - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
     .NOTES
-    Version     : 1.0.0
+    Version     : 3.7.2.0
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
-    Twitter     : 
     CreatedDate : 2021-10-07
     FileName    : 
     License     : (none asserted)
@@ -500,17 +451,12 @@ function Get-MediaInfoRAW
     *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
     *3.7 7/31/21 - stax76's posted rev
     .DESCRIPTION
-    Get-MediaInfoRAW - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
     Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset. 
     So this function parses out the -RAW text returned, into a nested General|Video|Audio object
     .PARAMETER Path
     Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
     .PARAMETER fixNames
     Switch to replace spaces and forward-slashes in default MediaInfo property names, with underscores (default's True)
-    .INPUT
-    Path as string to a media file. Can also be passed via pipeline.
-    .OUTPUT
-    System.Object
     .EXAMPLE
     PS> $data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ; 
     Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
@@ -519,13 +465,13 @@ function Get-MediaInfoRAW
     .LINK
     https://github.com/tostka/Get-MediaInfo
     #>
-    [CmdletBinding(DefaultParameterSetName='Full')]
+    [CmdletBinding()]
     [Alias('gmis')]
     Param(
         [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]        
         [ValidateScript({Test-Path $_})]
         [string] $Path,
-        [Parameter(ParameterSetName='Full',HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores (default's True).[-fixNames]")]
+        [Parameter(,HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores (default's True).[-fixNames]")]
         [Switch]$fixNames = $true
     )
     Begin
