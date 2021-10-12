@@ -1,0 +1,1 @@
+.\publish-ModuleLocalFork.ps1 -path 'C:\sc\Get-MediaInfo' -localScope 'AllUsers' -whatif -verbose

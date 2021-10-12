@@ -56,7 +56,7 @@ $script:audioExtensions = 'aac', 'ac3', 'dts', 'dtshd', 'dtshr', 'dtsma', 'eac3'
 $script:cacheVersion    = 45
 $script:culture         = [Globalization.CultureInfo]::InvariantCulture
 
-function _convertStringToInt($value)
+function _convert-StringToInt($value)
 {
     try {
         [int]::Parse($value, $culture)
@@ -65,7 +65,7 @@ function _convertStringToInt($value)
     }
 }
 
-function _convertStringToDouble($value)
+function _convert-StringToDouble($value)
 {
     try {
         [double]::Parse($value, $culture)
@@ -74,7 +74,7 @@ function _convertStringToDouble($value)
     }
 }
 
-function _convertStringToLong($value)
+function _convert-StringToLong($value)
 {
     try {
         [long]::Parse($value, $culture)
@@ -204,13 +204,13 @@ function Get-MediaInfo
                         FileName       = [IO.Path]::GetFileName($file)
                         Ext            = $extension
                         Format         = $format
-                        DAR            = _convertStringToDouble $mi.GetInfo('Video', 0, 'DisplayAspectRatio')
-                        Width          = _convertStringToInt $mi.GetInfo('Video', 0, 'Width')
-                        Height         = _convertStringToInt $mi.GetInfo('Video', 0, 'Height')
-                        BitRate        = (_convertStringToInt $mi.GetInfo('Video', 0, 'BitRate')) / 1000
-                        Duration       = (_convertStringToDouble $mi.GetInfo('General', 0, 'Duration')) / 60000
-                        FileSize       = (_convertStringToLong $mi.GetInfo('General', 0, 'FileSize')) / 1024 / 1024
-                        FrameRate      = _convertStringToDouble $mi.GetInfo('Video', 0, 'FrameRate')
+                        DAR            = _convert-StringToDouble $mi.GetInfo('Video', 0, 'DisplayAspectRatio')
+                        Width          = _convert-StringToInt $mi.GetInfo('Video', 0, 'Width')
+                        Height         = _convert-StringToInt $mi.GetInfo('Video', 0, 'Height')
+                        BitRate        = (_convert-StringToInt $mi.GetInfo('Video', 0, 'BitRate')) / 1000
+                        Duration       = (_convert-StringToDouble $mi.GetInfo('General', 0, 'Duration')) / 60000
+                        FileSize       = (_convert-StringToLong $mi.GetInfo('General', 0, 'FileSize')) / 1024 / 1024
+                        FrameRate      = _convert-StringToDouble $mi.GetInfo('Video', 0, 'FrameRate')
                         AudioCodec     = $mi.GetInfo('General', 0, 'Audio_Codec_List')
                         TextFormat     = $mi.GetInfo('General', 0, 'Text_Format_List')
                         ScanType       = $mi.GetInfo('Video',   0, 'ScanType')
@@ -246,9 +246,9 @@ function Get-MediaInfo
                         Album       = $mi.GetInfo('General', 0, 'Album')
                         Year        = $mi.GetInfo('General', 0, 'Recorded_Date')
                         Genre       = $mi.GetInfo('General', 0, 'Genre')
-                        Duration    = (_convertStringToDouble $mi.GetInfo('General', 0, 'Duration')) / 60000
-                        BitRate     = (_convertStringToInt $mi.GetInfo('Audio', 0, 'BitRate')) / 1000
-                        FileSize    = (_convertStringToLong $mi.GetInfo('General', 0, 'FileSize')) / 1024 / 1024
+                        Duration    = (_convert-StringToDouble $mi.GetInfo('General', 0, 'Duration')) / 60000
+                        BitRate     = (_convert-StringToInt $mi.GetInfo('Audio', 0, 'BitRate')) / 1000
+                        FileSize    = (_convert-StringToLong $mi.GetInfo('General', 0, 'FileSize')) / 1024 / 1024
                         Directory   = [IO.Path]::GetDirectoryName($file)
                     }
 
