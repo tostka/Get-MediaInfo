@@ -48,7 +48,6 @@ https://github.com/tostka/verb-XXX
 $script:ModuleRoot = $PSScriptRoot ;
 $script:ModuleVersion = (Import-PowerShellDataFile -Path (get-childitem $script:moduleroot\*.psd1).fullname).moduleversion ;
 
-# flipped these to 'module private' scope
 $script:videoExtensions = '264', '265', 'asf', 'avc', 'avi', 'divx', 'flv', 'h264', 'h265', 'hevc', 'm2ts', 'm2v', 'm4v', 
     'mkv', 'mov', 'mp4', 'mpeg', 'mpg', 'mpv', 'mts', 'rar', 'ts', 'vob', 'webm', 'wmv'
 $script:audioExtensions = 'aac', 'ac3', 'dts', 'dtshd', 'dtshr', 'dtsma', 'eac3', 'flac', 'm4a', 'mka', 'mp2', 'mp3', 
@@ -82,6 +81,102 @@ function _convert-StringToLong($value)
         [long]0
     }
 }
+
+#*------v Function _convert-BinaryToDecimalStorageUnits v------
+Function _convert-BinaryToDecimalStorageUnits {
+    <#
+    .SYNOPSIS
+    _convert-BinaryToDecimalStorageUnits.ps1 - Convert KiB|MiB|GiB|TiB|PiB binary storage units to bytes|mb|kb|gb|tb|pb.  Rationale: 'kilo' is a prefix for base-10 or decimal numbers, which doesn't actually apply to that figure when it's a representation of a binary number (as memory etc represent). The correct prefix is instead kibi, so 1024 bits is really a kibibit.
+    .NOTES
+    Version     : 1.0.0
+    Author      : Todd Kadrie
+    Website     :	http://www.toddomation.com
+    Twitter     :	@tostka / http://twitter.com/tostka
+    CreatedDate : 2021-10-12
+    FileName    : _convert-BinaryToDecimalStorageUnits.ps1
+    License     : MIT License
+    Copyright   : (c) 2021 Todd Kadrie
+    Github      : https://github.com/tostka/verb-IO
+    Tags        : PowershellConsole
+    REVISIONS
+    * 5:19 PM 7/20/2021 init vers
+    .DESCRIPTION
+    _convert-BinaryToDecimalStorageUnits.ps1 - Convert KiB|MiB|GiB|TiB|PiB binary storage units to bytes|mb|kb|gb|tb|pb.  Rationale: 'kilo' is a prefix for base-10 or decimal numbers, which doesn't actually apply to that figure when it's a representation of a binary number (as memory etc represent). The correct prefix is instead kibi, so 1024 bits is really a kibibit.
+    .PARAMETER Value
+    String representation of an integer size and unit in 'KiB|MiB|GiB|TiB|PiB' [-value '1.39 GiB']
+    .PARAMETER To
+    Desired output metric (Bytes|KB}MB|GB|TB) [-To 'GB']
+    .PARAMETER Decimals
+    decimal places of rounding[-Decimals 2]
+    .OUTPUT
+    decimal ize in converted decimal unit.
+    .EXAMPLE
+    $filesizeGB = '1.39 GiB' | _convert-BinaryToDecimalStorageUnits -To GB -Decimals 2;
+    Example converting a binary Gibibyte value into a decimal gigabyte value, rounded to 2 decimal places.
+    .LINK
+    https://github.com/tostka/verb-IO
+    #>
+
+    #[Alias('convert-
+    [CmdletBinding()]
+    Param (
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipeline=$true,HelpMessage="String representation of an integer size and unit in 'KiB|MiB|GiB|TiB|PiB' [-value '1.39 GiB']")]
+        #[ValidateNotNullOrEmpty()]
+        [ValidatePattern("^([\d\.]+)((\s)*)([KMGTP]iB)$")]
+        [string]$Value,
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipeline=$true,HelpMessage="Desired output metric (Bytes|KB}MB|GB|TB) [-To 'GB']")]
+        [validateset('Bytes','KB','MB','GB','TB')]
+        [string]$To='MB',
+        [Parameter(HelpMessage="decimal places of rounding[-Decimals 2]")]
+        [int]$Decimals = 4
+    )
+    if($value.contains(' ')){
+        $size,$unit = $value.split(' ') ;
+    } else {
+        #$size,$unit = $value -split '[KMGTP]' ;
+        if($value  -match '^([\d\.]+)((\s)*)([KMGTP]iB)$'){
+            $size = $matches[1] ;
+            $unit = $matches[4] ;
+        } ;
+    }
+    switch -regex ($unit){
+        'PiB' {
+            write-verbose "converting  PiB -> $($To)" ;
+            $inBytes = ([double]$size * 1024 * 1024 * 1024 * 1024 * 1024) ;
+        }
+        'TiB' {
+                # Tibibyte
+                write-verbose "converting  TiB -> $($To)" ;
+                $inBytes = ([double]$size * 1024 * 1024 * 1024 * 1024) ;
+        }
+        'GiB' {
+            # gibibyte
+            write-verbose "converting  GiB -> $($To)" ;
+            $inBytes = ([double]$size * 1024 * 1024 * 1024) ;
+        }
+        'MiB' {
+            # mebibyte (MiB):
+            write-verbose "converting  MiB -> $($To)" ;
+            # FileSize_String                577 MiB
+            $inBytes = ([double]$size * 1024 * 1024 ) ;
+        }
+        'KiB' {
+            write-verbose "converting  KiB -> $($To)" ;
+            # kibibyte (KiB)
+            # FileSize_String                577 MiB
+            $inBytes = ([double]$size * 1024 ) ;
+        }
+    } ;
+    switch($To){
+        "Bytes" {$inBytes | write-output }
+        "KB" {$output = $inBytes/1KB}
+        "MB" {$output = $inBytes/1MB}
+        "GB" {$output = $inBytes/1GB}
+        "TB" {$output = $inBytes/1TB}
+    } ;
+    [Math]::Round($output,$Decimals,[MidPointRounding]::AwayFromZero) | write-output ;
+} ;
+#*------^ END Function _convert-BinaryToDecimalStorageUnits ^------
 
 #*------v Function Get-MediaInfo v------
 function Get-MediaInfo
@@ -428,8 +523,7 @@ function Get-MediaInfoSummary
 #*------^ END Function Get-MediaInfoSummary  ^------
 
 #*------v Function Get-MediaInfoRAW v------
-function Get-MediaInfoRAW
-{
+function Get-MediaInfoRAW {
     <#
     .SYNOPSIS
     Get-MediaInfoRAW.ps1 - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
@@ -438,7 +532,7 @@ function Get-MediaInfoRAW
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
     CreatedDate : 2021-10-07
-    FileName    : 
+    FileName    :
     License     : (none asserted)
     Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
     Github      : https://github.com/tostka/verb-XXX
@@ -447,87 +541,160 @@ function Get-MediaInfoRAW
     AddedWebsite: http://www.toddomation.com
     AddedTwitter: @tostka / http://twitter.com/tostka
     REVISIONS
-    * 3:00 PM 10/9/2021 TK:variant of Get-MediaInfoSummary() that returns the full set of raw MediaInfo.dll properties, as an object.  
+    * 7:44 PM 10/14/2021 added format string parser, adds an extra [property]_[unit] variant for the [property]_string values
+    * 3:00 PM 10/9/2021 TK:variant of Get-MediaInfoSummary() that returns the full set of raw MediaInfo.dll properties, as an object.
     *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
     *3.7 7/31/21 - stax76's posted rev
     .DESCRIPTION
-    Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset. 
+    Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset.
     So this function parses out the -RAW text returned, into a nested General|Video|Audio object
     .PARAMETER Path
     Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
     .PARAMETER fixNames
     Switch to replace spaces and forward-slashes in default MediaInfo property names, with underscores (default's True)
     .EXAMPLE
-    PS> $data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ; 
+    PS> $data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ;
     Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
     .LINK
-    https://github.com/stax76/Get-MediaInfo   
+    https://github.com/stax76/Get-MediaInfo
     .LINK
     https://github.com/tostka/Get-MediaInfo
     #>
     [CmdletBinding()]
-    [Alias('gmis')]
+    [Alias('gmir')]
     Param(
-        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]        
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]
         [ValidateScript({Test-Path $_})]
         [string] $Path,
-        [Parameter(,HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores (default's True).[-fixNames]")]
-        [Switch]$fixNames = $true
-    )
-    Begin
-    {
+        [Parameter(HelpMessage="Default storage output units[Bytes|KB|MB|GB|TB].[-StorageUnits 'MB']")]
+        [validateset('Bytes','KB','MB','GB','TB')] 
+        [string] $StorageUnits='MB',
+        [Parameter(HelpMessage="Decimal places of rounding(where post-conversion occurs)[-Decimals 2]")]
+        [int]$Decimals = 3,
+        [Parameter(,HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores.(default's True).[-fixNames]")]
+        [Switch]$fixNames = $true,
+        [Parameter(,HelpMessage="Switch to disable additional conversion of string metrics to working numerics.[-fixNames]")]
+        [Switch]$noPostConversion
+    ) ;     
+    BEGIN{
         Add-Type -Path ($PSScriptRoot + '\MediaInfoSharp.dll')
-        $rgxKeyValue = '(.*)\s+:\s(.*)' ; 
-        $rgxRegion = '^(\w*)$' ; 
-
+        
+        $rgxKeyValue = '(.*)\s+:\s(.*)' ;
+        $rgxRegion = '^(\w*)$' ;
+        $rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
+        $rgxTimeMMSS = '^(?<Minutes>\d+)\smin\s(?<Seconds>\d+)\ss$' # 21 min 38 s
+        $rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
+        $rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
+        $rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
+        $rgxBit = '^(?<bit>.*)\sbit$';
+        $rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
+        $rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$'
+                    #'^(?<size>.*)\s(?<unit>(PiB|TiB|GiB|MiB|KiB|Bytes))$' ;
     }
-    Process
-    {
-        $mi = New-Object MediaInfoSharp -ArgumentList (Convert-Path -LiteralPath $Path) ; 
-        #$Raw -eq $true}
-        #$value = $mi.GetSummary($Full, $Raw)
-        $value = $mi.GetSummary($false, $true) ; 
-        $mi.Dispose() ; 
-        $region = $null ; 
+    PROCESS{
+        $mi = New-Object MediaInfoSharp -ArgumentList (Convert-Path -LiteralPath $Path) ;
+        $value = $mi.GetSummary($false, $true) ;
+        $mi.Dispose() ;
+        $region = $null ;
         $objRaw = [ordered]@{
             General  = [ordered]@{} ;
             Video  = [ordered]@{} ;
             Audio  = [ordered]@{} ;
-        } ; 
-        $lines = $value.Split([Environment]::NewLine) ; 
+        } ;
+        $lines = $value.Split([Environment]::NewLine) ;
         foreach($line in $lines){
+            $TagParsed= $ValueParsed = $null ;
             if($line.Length -eq 0){
                 Continue ;
             }else{
                 switch -Regex ($line){
                     $rgxRegion {
                         $region = $matches[0] ;
-                        write-verbose "(region:$($region))" ; 
-                    } 
+                        write-verbose "(region:$($region))" ;
+                    }
                     $rgxKeyValue {
                         $key,$value = ($line-split $rgxKeyValue).Trim()|?{$_} ;
-                        if($fixNames){$key= $key -replace '(\s|\/)','_' } ; 
-                        #write-verbose "key:$($key)`nvalue:$(($value|out-string).trim())" ; 
+                        if($fixNames){
+                            $key= $key -replace '(\s|\/)','_' -replace '(\(|\))','_'  -replace '\*','x'
+                        } ;
+                        # parse and convert fields for which we have format matches                        
+                        switch -regex ($value){
+                            #$rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$' ;
+                            $rgxFileSizeBinary  {
+                                $TagParsed = 'MB' ; # $matches.unit ; # no we're using common mb units
+                                $ValueParsed  = $value | _convert-BinaryToDecimalStorageUnits -To $StorageUnits -Decimals $Decimal ;
+                            }
+                            #$rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
+                            $rgxTimeHHMM {
+                                $ts = New-TimeSpan -Hours $matches.Hours -Minutes $matches.Minutes
+                                $TagParsed= 'Mins'
+                                $ValueParsed = $ts.TotalMinutes ;
+                            }
+                            #$rgxTimeMMSS = '^(?<Minutes>\d+)\smin\s(?<Seconds>\d+)\ss$' # 21 min 38 s
+                            $rgxTimeMMSS {
+                                $ts = New-TimeSpan -Minutes $matches.Minutes -Seconds $matches.Seconds ;
+                                $TagParsed= 'Mins'
+                                $ValueParsed = $ts.TotalMinutes ;
+                            }
+                            #$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
+                            $rgxDimensionPixels {
+                                $TagParsed= 'Pixels'
+                                $ValueParsed = $matches.pixels.replace(' ','') ;
+                            }
+                            #$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
+                            $rgxKbps {
+                                $TagParsed= 'kbps'
+                                $ValueParsed = $matches.kbps.replace(' ','');
+                            }
+                            #$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
+                            $rgxFrameRt {
+                                $TagParsed= 'fps'
+                                $ValueParsed = $matches.framerate.replace(' ','') ;
+                            }
+                            #$rgxBit = '^(?<bit>.*)\sbit$';
+                            $rgxBit {
+                                $TagParsed= 'bit'
+                                $ValueParsed = $matches.bit.replace(' ','') ;
+                            }
+                            #$rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
+                            $rgxKHz {
+                                $TagParsed= 'bit'
+                                $ValueParsed = $matches.khz.replace(' ','') ;
+                            }
+                            default{write-verbose "(unable to match `$value:$($value) to a parsable format" }
+                        } # value parse
+
+                        #write-verbose "key:$($key)`nvalue:$(($value|out-string).trim())" ;
                         switch ($region){
                             'General' {
                                 $objRaw.General.add($key,$value) ;
-                            } 
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                   $objRaw.General.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
+                                } ;
+                            }
                             'Video' {
-                                $objRaw.Video.add($key,$value) ; 
-                            } 
+                                $objRaw.Video.add($key,$value) ;
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                   $objRaw.Video.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
+                                } ;
+                            }
                             'Audio' {
-                                $objRaw.Audio.add($key,$value) ; 
-                            } ; 
-                        } ; 
-                    } 
-                } ; 
-            } ; 
-            #write-verbose "Hash status:`n$(($objRaw|out-string).trim())" ; 
+                                $objRaw.Audio.add($key,$value) ;
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                   $objRaw.Audio.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
+                                } ;
+                            } ;
+                        } ; # region
+                    }  # key value
+                } ; # switch line
+            } ; # else
+            #write-verbose "Hash status:`n$(($objRaw|out-string).trim())" ;
         } ;
-        #write-verbose "Hash created:`n$(($objRaw|out-string).trim())" ; 
-        New-Object PSObject -Property $objRaw | write-output ;             
-    }
-}
+        #write-verbose "Hash created:`n$(($objRaw|out-string).trim())" ;
+        New-Object PSObject -Property $objRaw | write-output ;
+    } ; 
+} ; 
 #*------^ END Function Get-MediaInfoRAW  ^------
+
 
 Export-ModuleMember -Function 'get-*' ; 

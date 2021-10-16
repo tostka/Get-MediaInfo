@@ -25,7 +25,10 @@ Get-MediaInfo:ob
 Get-MediaInfo:PipelineVariable
 Get-MediaInfo:pv
 Get-MediaInfoRAW:Path
+Get-MediaInfoRAW:StorageUnits
+Get-MediaInfoRAW:Decimals
 Get-MediaInfoRAW:fixNames
+Get-MediaInfoRAW:noPostConversion
 Get-MediaInfoRAW:Verbose
 Get-MediaInfoRAW:vb
 Get-MediaInfoRAW:Debug
