@@ -9,6 +9,7 @@ It consists of three functions:
 - [Get-MediaInfo](#get-mediainfo)
 - [Get-MediaInfoValue](#get-mediainfovalue)
 - [Get-MediaInfoSummary](#get-mediainfosummary)
+- [Get-MediaInfoRAW](#get-mediainforaw)
 
 ![-](Summary.jpg)
 
@@ -20,7 +21,10 @@ Installation
 
 Installation or download via PowerShellGet:
 
-https://www.powershellgallery.com/packages/Get-MediaInfo
+No build provided for PSGallery. Options:
+- manually install repo files 
+- copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
+- or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
 
 
 Get-MediaInfo
@@ -282,10 +286,3 @@ Output
 
 A summary line by line as string array.
 
-
-Related apps
-------------
-
-Find a list of related apps:
-
-https://stax76.github.io/frankskare
