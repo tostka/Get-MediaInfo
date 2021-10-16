@@ -3,16 +3,16 @@
 .SYNOPSIS
 Get-MediaInfo.psm1 - Get-MediaInfo is a PowerShell MediaInfo solution.
 .NOTES
-Version     : 3.7.1.1
+Version     : 3.7.3
 Author      : Frank Skare (stax76)
 Website     : https://stax76.github.io/frankskare/
-Twitter     : 
+Twitter     :
 CreatedDate : 2021-10-07
-FileName    : 
+FileName    :
 License     : (none asserted)
 Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
 Github      : https://github.com/tostka/verb-XXX
-Tags        : Powershell,mp3, media, video, audio,  
+Tags        : Powershell,mp3, media, video, audio,
 AddedCredit : Todd Kadrie
 AddedWebsite: http://www.toddomation.com
 AddedTwitter: @tostka / http://twitter.com/tostka
@@ -25,12 +25,12 @@ Get-MediaInfo.psm1 - Get-MediaInfo is a PowerShell MediaInfo solution.
 
 Get-MediaInfo is a PowerShell MediaInfo solution.
 
-It consists of three functions:
+It consists of four functions:
 
 -   [Get-MediaInfo](https://github.com/stax76/Get-MediaInfo#get-mediainfo)
 -   [Get-MediaInfoValue](https://github.com/stax76/Get-MediaInfo#get-mediainfovalue)
 -   [Get-MediaInfoSummary](https://github.com/stax76/Get-MediaInfo#get-mediainfosummary)
-
+-
 [![-](https://github.com/stax76/Get-MediaInfo/raw/master/Summary.jpg)](https://github.com/stax76/Get-MediaInfo/blob/master/Summary.jpg)
 
 [![-](https://github.com/stax76/Get-MediaInfo/raw/master/GridView.png)](https://github.com/stax76/Get-MediaInfo/blob/master/GridView.png)
@@ -48,9 +48,9 @@ https://github.com/tostka/verb-XXX
 $script:ModuleRoot = $PSScriptRoot ;
 $script:ModuleVersion = (Import-PowerShellDataFile -Path (get-childitem $script:moduleroot\*.psd1).fullname).moduleversion ;
 
-$script:videoExtensions = '264', '265', 'asf', 'avc', 'avi', 'divx', 'flv', 'h264', 'h265', 'hevc', 'm2ts', 'm2v', 'm4v', 
+$script:videoExtensions = '264', '265', 'asf', 'avc', 'avi', 'divx', 'flv', 'h264', 'h265', 'hevc', 'm2ts', 'm2v', 'm4v',
     'mkv', 'mov', 'mp4', 'mpeg', 'mpg', 'mpv', 'mts', 'rar', 'ts', 'vob', 'webm', 'wmv'
-$script:audioExtensions = 'aac', 'ac3', 'dts', 'dtshd', 'dtshr', 'dtsma', 'eac3', 'flac', 'm4a', 'mka', 'mp2', 'mp3', 
+$script:audioExtensions = 'aac', 'ac3', 'dts', 'dtshd', 'dtshr', 'dtsma', 'eac3', 'flac', 'm4a', 'mka', 'mp2', 'mp3',
     'mpa', 'ogg', 'opus', 'thd', 'w64', 'wav'
 $script:cacheVersion    = 45
 $script:culture         = [Globalization.CultureInfo]::InvariantCulture
@@ -188,9 +188,9 @@ function Get-MediaInfo
     Version     : 3.7.1.1
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
-    Twitter     : 
+    Twitter     :
     CreatedDate : 2021-10-07
-    FileName    : 
+    FileName    :
     License     : (none asserted)
     Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
     Github      : https://github.com/tostka/verb-XXX
@@ -210,19 +210,19 @@ function Get-MediaInfo
     .PARAMETER Audio
     Switch to cause only audio files to be processed. [-Audio]
     .EXAMPLE
-    PS> Get-ChildItem 'D:\Samples' | Get-MediaInfo | Out-GridView ; 
+    PS> Get-ChildItem 'D:\Samples' | Get-MediaInfo | Out-GridView ;
     Displays media files of the defined folder using a grid view.
     .EXAMPLE
-    PS> gci | gmi | ogv ; 
+    PS> gci | gmi | ogv ;
     Same as first example but using the current folder and aliases.
     .EXAMPLE
-    PS> gci | gmi | select filename, duration, filesize | 
-        group duration | 
-        where { $_.count -gt 1 } | 
-        select -expand group | format-list ; 
+    PS> gci | gmi | select filename, duration, filesize |
+        group duration |
+        where { $_.count -gt 1 } |
+        select -expand group | format-list ;
     Find duplicates by comparing the duration.
     .LINK
-    https://github.com/stax76/Get-MediaInfo   
+    https://github.com/stax76/Get-MediaInfo
     .LINK
     https://github.com/tostka/Get-MediaInfo
     #>
@@ -236,7 +236,7 @@ function Get-MediaInfo
         [Switch]$Video,
         [Parameter(ParameterSetName='Audio',HelpMessage="Switch to cause only audio files to be processed. [-Audio]")]
         [Switch]$Audio
-    )    
+    )
     Begin
     {
         Add-Type -Path ($PSScriptRoot + '\MediaInfoSharp.dll')
@@ -367,9 +367,9 @@ function Get-MediaInfoValue
     Version     : 3.7.2.0
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
-    Twitter     : 
+    Twitter     :
     CreatedDate : 2021-10-07
-    FileName    : 
+    FileName    :
     License     : (none asserted)
     Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
     Github      : https://github.com/tostka/verb-XXX
@@ -396,7 +396,7 @@ function Get-MediaInfoValue
     They can also be seen with Get-MediaInfoSummary with the -Raw flag enabled.
     .EXAMPLE
     PS> Get-MediaInfoValue '.\Meg Myers - Desire (Hucci Remix).mp3' -Kind General -Parameter Performer
-        output: 
+        output:
         Meg Myers
     Get the artist from a MP3 file.
     .EXAMPLE
@@ -422,20 +422,20 @@ function Get-MediaInfoValue
     $mi.Dispose() ;
     To retrieve specific properties with highest possible performance the .NET class must be used directly:
     .LINK
-    https://github.com/stax76/Get-MediaInfo   
+    https://github.com/stax76/Get-MediaInfo
     .LINK
     https://github.com/tostka/Get-MediaInfo
     #>
     [CmdletBinding()]
     [Alias('gmiv')]
-    Param(        
-        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file.[-Path D:\path-to\video.ext]")]        
+    Param(
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file.[-Path D:\path-to\video.ext]")]
         [ValidateScript({Test-Path $_})]
         [string] $Path,
-        [Parameter(Mandatory=$true,HelpMessage="A MediaInfo kind (General|Video|Audio|Text|Image|Menu).[-Kind Video]")] 
+        [Parameter(Mandatory=$true,HelpMessage="A MediaInfo kind (General|Video|Audio|Text|Image|Menu).[-Kind Video]")]
         [ValidateSet('General', 'Video', 'Audio', 'Text', 'Image', 'Menu')]
         [String] $Kind,
-        [Parameter(HelpMessage="Zero based stream number.[-index 0]")] 
+        [Parameter(HelpMessage="Zero based stream number.[-index 0]")]
         [int] $Index,
         [Parameter(Mandatory=$true,HelpMessage="Name of the property to get.[-param 'Performer']")]
         [string] $Parameter
@@ -466,9 +466,9 @@ function Get-MediaInfoSummary
     Version     : 3.7.2.0
     Author      : Frank Skare (stax76)
     Website     : https://stax76.github.io/frankskare/
-    Twitter     : 
+    Twitter     :
     CreatedDate : 2021-10-07
-    FileName    : 
+    FileName    :
     License     : (none asserted)
     Copyright   : (C) 2020-2021 Frank Skare (stax76). All rights reserved.
     Github      : https://github.com/tostka/verb-XXX
@@ -491,14 +491,14 @@ function Get-MediaInfoSummary
     PS> Get-MediaInfoSummary 'D:\Samples\Downton Abbey.mkv'
     Output the default Full media summary for the specified video.
     .LINK
-    https://github.com/stax76/Get-MediaInfo   
+    https://github.com/stax76/Get-MediaInfo
     .LINK
     https://github.com/tostka/Get-MediaInfo
     #>
     [CmdletBinding(DefaultParameterSetName='Full')]
     [Alias('gmis')]
     Param(
-        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]        
+        [Parameter(Position=0,Mandatory=$True,ValueFromPipelineByPropertyName=$true,HelpMessage="Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]")]
         [ValidateScript({Test-Path $_})]
         [string] $Path,
         [Parameter(ParameterSetName='Full',HelpMessage="Switch to show a extended summary.[-Full]")]
@@ -523,7 +523,8 @@ function Get-MediaInfoSummary
 #*------^ END Function Get-MediaInfoSummary  ^------
 
 #*------v Function Get-MediaInfoRAW v------
-function Get-MediaInfoRAW {
+function Get-MediaInfoRAW
+{
     <#
     .SYNOPSIS
     Get-MediaInfoRAW.ps1 - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
@@ -541,10 +542,10 @@ function Get-MediaInfoRAW {
     AddedWebsite: http://www.toddomation.com
     AddedTwitter: @tostka / http://twitter.com/tostka
     REVISIONS
-    * 7:44 PM 10/14/2021 added format string parser, adds an extra [property]_[unit] variant for the [property]_string values
+    * 2:34 PM 10/16/2021 fixed $rgxTimeMMSS error, properly covers spurious spaces in the strings, expanded same to the $rgxTimeHHMM as well. Stronly [regex] typed the rgxs to force fails immed on load (rather silently went conversions fail and you get blank returns on some properties).
+    * 7:44 PM 10/14/2021 added format string parser, adds an extra [property]_[unit] variant for the [property]_string values in the returned object.
     * 3:00 PM 10/9/2021 TK:variant of Get-MediaInfoSummary() that returns the full set of raw MediaInfo.dll properties, as an object.
-    *3.7.1.0 - forked vers: added CBH (to make get-help functional), added examples)
-    *3.7 7/31/21 - stax76's posted rev
+    *3.7 7/31/21 - stax76's posted rev of orignal Get-MediaInfoSummary() lines
     .DESCRIPTION
     Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset.
     So this function parses out the -RAW text returned, into a nested General|Video|Audio object
@@ -567,7 +568,7 @@ function Get-MediaInfoRAW {
         [ValidateScript({Test-Path $_})]
         [string] $Path,
         [Parameter(HelpMessage="Default storage output units[Bytes|KB|MB|GB|TB].[-StorageUnits 'MB']")]
-        [validateset('Bytes','KB','MB','GB','TB')] 
+        [validateset('Bytes','KB','MB','GB','TB')]
         [string] $StorageUnits='MB',
         [Parameter(HelpMessage="Decimal places of rounding(where post-conversion occurs)[-Decimals 2]")]
         [int]$Decimals = 3,
@@ -575,21 +576,21 @@ function Get-MediaInfoRAW {
         [Switch]$fixNames = $true,
         [Parameter(,HelpMessage="Switch to disable additional conversion of string metrics to working numerics.[-fixNames]")]
         [Switch]$noPostConversion
-    ) ;     
+    ) ;
     BEGIN{
         Add-Type -Path ($PSScriptRoot + '\MediaInfoSharp.dll')
-        
-        $rgxKeyValue = '(.*)\s+:\s(.*)' ;
-        $rgxRegion = '^(\w*)$' ;
-        $rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
-        $rgxTimeMMSS = '^(?<Minutes>\d+)\smin\s(?<Seconds>\d+)\ss$' # 21 min 38 s
-        $rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
-        $rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
-        $rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
-        $rgxBit = '^(?<bit>.*)\sbit$';
-        $rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
-        $rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$'
-                    #'^(?<size>.*)\s(?<unit>(PiB|TiB|GiB|MiB|KiB|Bytes))$' ;
+
+        [regex]$rgxKeyValue = '(.*)\s+:\s(.*)' ;
+        [regex]$rgxRegion = '^(\w*)$' ;
+        [regex]$rgxTimeHHMM = '^(?<Hours>\d+)((\s)*)h\s(?<Minutes>\d+)((\s)*)m((i)*)n$'
+        [regex]$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
+        [regex]$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
+        [regex]$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
+        [regex]$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
+        [regex]$rgxBit = '^(?<bit>.*)\sbit$';
+        [regex]$rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
+        [regex]$rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$'
+
     }
     PROCESS{
         $mi = New-Object MediaInfoSharp -ArgumentList (Convert-Path -LiteralPath $Path) ;
@@ -615,9 +616,10 @@ function Get-MediaInfoRAW {
                     $rgxKeyValue {
                         $key,$value = ($line-split $rgxKeyValue).Trim()|?{$_} ;
                         if($fixNames){
+                            # sub out 'challenging' property name values with alts: \s, /, (, ), *
                             $key= $key -replace '(\s|\/)','_' -replace '(\(|\))','_'  -replace '\*','x'
                         } ;
-                        # parse and convert fields for which we have format matches                        
+                        # parse and convert fields for which we have format matches
                         switch -regex ($value){
                             #$rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$' ;
                             $rgxFileSizeBinary  {
@@ -626,39 +628,39 @@ function Get-MediaInfoRAW {
                             }
                             #$rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
                             $rgxTimeHHMM {
-                                $ts = New-TimeSpan -Hours $matches.Hours -Minutes $matches.Minutes
-                                $TagParsed= 'Mins'
+                                $ts = New-TimeSpan -Hours $matches.Hours -Minutes $matches.Minutes ;
+                                $TagParsed= 'Mins' ;
                                 $ValueParsed = $ts.TotalMinutes ;
                             }
-                            #$rgxTimeMMSS = '^(?<Minutes>\d+)\smin\s(?<Seconds>\d+)\ss$' # 21 min 38 s
+                            #$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
                             $rgxTimeMMSS {
                                 $ts = New-TimeSpan -Minutes $matches.Minutes -Seconds $matches.Seconds ;
-                                $TagParsed= 'Mins'
+                                $TagParsed= 'Mins' ;
                                 $ValueParsed = $ts.TotalMinutes ;
                             }
                             #$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
                             $rgxDimensionPixels {
-                                $TagParsed= 'Pixels'
+                                $TagParsed= 'Pixels' ;
                                 $ValueParsed = $matches.pixels.replace(' ','') ;
                             }
                             #$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
                             $rgxKbps {
-                                $TagParsed= 'kbps'
+                                $TagParsed= 'kbps' ;
                                 $ValueParsed = $matches.kbps.replace(' ','');
                             }
                             #$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
                             $rgxFrameRt {
-                                $TagParsed= 'fps'
+                                $TagParsed= 'fps' ;
                                 $ValueParsed = $matches.framerate.replace(' ','') ;
                             }
                             #$rgxBit = '^(?<bit>.*)\sbit$';
                             $rgxBit {
-                                $TagParsed= 'bit'
+                                $TagParsed= 'bit' ;
                                 $ValueParsed = $matches.bit.replace(' ','') ;
                             }
                             #$rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
                             $rgxKHz {
-                                $TagParsed= 'bit'
+                                $TagParsed= 'bit' ;
                                 $ValueParsed = $matches.khz.replace(' ','') ;
                             }
                             default{write-verbose "(unable to match `$value:$($value) to a parsable format" }
@@ -692,9 +694,9 @@ function Get-MediaInfoRAW {
         } ;
         #write-verbose "Hash created:`n$(($objRaw|out-string).trim())" ;
         New-Object PSObject -Property $objRaw | write-output ;
-    } ; 
-} ; 
+    } ;
+} ;
 #*------^ END Function Get-MediaInfoRAW  ^------
 
 
-Export-ModuleMember -Function 'get-*' ; 
+Export-ModuleMember -Function 'get-*' ;
