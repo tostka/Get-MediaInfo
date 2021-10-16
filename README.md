@@ -1,6 +1,5 @@
 
-Get-MediaInfo
-=============
+# Get-MediaInfo
 
 Get-MediaInfo is a PowerShell MediaInfo solution.
 
@@ -9,283 +8,160 @@ It consists of three functions:
 - [Get-MediaInfo](#get-mediainfo)
 - [Get-MediaInfoValue](#get-mediainfovalue)
 - [Get-MediaInfoSummary](#get-mediainfosummary)
+- [Get-MediaInfoRAW](#get-mediainforaw)
 
 ![-](Summary.jpg)
 
 ![-](GridView.png)
 
 
-Installation
+## Installation
 ------------
 
 Installation or download via PowerShellGet:
 
-https://www.powershellgallery.com/packages/Get-MediaInfo
+No build provided for PSGallery. Options:
+- manually install repo files 
+- copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
+- or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
 
 
-Get-MediaInfo
--------------
+## <a name="Get-MediaInfoRAW"></a>Get-MediaInfoRAW
+### SYNOPSIS
+Get-MediaInfoRAW.ps1 - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
+### DESCRIPTION
+Created this variant because I want the full low-level range of MediaInfo.dll properties, and not simply a subset.
+So this function parses out the -RAW text returned, into a nested General|Video|Audio object
+# PARAMETERS
 
-Converts media file objects into MediaInfo objects.
+### **-Path**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-TRUE-Red?) \
+Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
 
-```
-NAME
-    Get-MediaInfo
-
-SYNTAX
-    Get-MediaInfo [[-Path] <string[]>] [-Video] [-Audio]  [<CommonParameters>]
-
-ALIASES
-    gmi
-```
-
-
-Description
------------
-
-Converts media file objects into MediaInfo objects.
+  ### **-StorageUnits**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-MB-Blue?color=5547a8)\
 
 
-Examples
---------
-
-Displays media files of the defined folder using a grid view.
-
-```PowerShell
-Get-ChildItem 'D:\Samples' | Get-MediaInfo | Out-GridView
-```
+  ### **-Decimals**
+> ![Foo](https://img.shields.io/badge/Type-Int32-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-3-Blue?color=5547a8)\
 
 
-Same as above but using the current folder and aliases.
+  ### **-fixNames**
+> ![Foo](https://img.shields.io/badge/Type-SwitchParameter-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-True-Blue?color=5547a8)\
+Switch to replace spaces and forward-slashes in default MediaInfo property names, with underscores (default's True)
 
-```PowerShell
-gci | gmi | ogv
-```
+  ### **-noPostConversion**
+> ![Foo](https://img.shields.io/badge/Type-SwitchParameter-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-False-Blue?color=5547a8)\
 
 
-Find duplicates by comparing the duration.
+ #### EXAMPLE 1
+```powershell
+PS>$data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ;
 
-```PowerShell
-gci | gmi | select filename, duration, filesize | group duration | where { $_.count -gt 1 } | select -expand group | format-list
+Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
 ```
 
+![-](get-mediainfoRAWp1.jpg)
+![-](get-mediainfoRAWp2.jpg)
+![-](get-mediainfoRAWp3.jpg)
+![-](get-mediainfoRAWp4.jpg)
 
-Parameters
-----------
+## <a name="Get-MediaInfoSummary"></a>Get-MediaInfoSummary
+### SYNOPSIS
+Get-MediaInfoSummary.ps1 -  - Shows a summary in text format for a media file.
+### DESCRIPTION
+Get-MediaInfoSummary.ps1 -  - Shows a summary in text format for a media file.
+# PARAMETERS
 
-**-Path**
+### **-Path**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-TRUE-Red?) \
+Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
 
-String array with audio or video files or FileInfo objects via pipeline.
+  ### **-Full**
+> ![Foo](https://img.shields.io/badge/Type-SwitchParameter-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-False-Blue?color=5547a8)\
+Switch to show a extended summary.[-Full]
 
+  ### **-Raw**
+> ![Foo](https://img.shields.io/badge/Type-SwitchParameter-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-False-Blue?color=5547a8)\
+Switch to show not the friendly parameter names but rather the names as they are used in the MediaInfo API.[-Raw]
 
-**-Video**
-
-Only video files will be processed.
-
-
-**-Audio**
-
-Only audio files will be processed.
-
-
-Input
------
-
-String array with audio or video files as Path parameter or FileInfo objects via pipeline.
-
-
-Output
-------
-
-MediaInfo objects.
+  ### **-RawParsed**
+> ![Foo](https://img.shields.io/badge/Type-SwitchParameter-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-False-Blue?color=5547a8)\
 
 
-Get-MediaInfoValue
-==================
+ #### EXAMPLE 1
+```powershell
+PS>Get-MediaInfoSummary 'D:\Samples\Downton Abbey.mkv'
 
-Returns specific properties from media files.
-
-```
-NAME
-    Get-MediaInfoValue
-
-SYNTAX
-    Get-MediaInfoValue
-        [-Path] <string>
-        [-Kind] {General | Video | Audio | Text | Image | Menu}
-        [[-Index] <int>]
-        [-Parameter] <string>
-        [<CommonParameters>]
-
-ALIASES
-    gmiv
+Output the default Full media summary for the specified video.
 ```
 
-Description
------------
+## <a name="Get-MediaInfoValue"></a>Get-MediaInfoValue
+### SYNOPSIS
+Get-MediaInfoValue.ps1 - Returns specific properties from media files.
+### DESCRIPTION
+Get-MediaInfoValue.ps1 - Returns specific properties from media files.
+# PARAMETERS
 
-Returns specific properties from media files.
+### **-Path**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-TRUE-Red?) \
+Path to a media file.[-Path D:\path-to\video.ext]
 
+  ### **-Kind**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-TRUE-Red?) \
+A MediaInfo kind (General|Video|Audio|Text|Image|Menu).[-Kind Video] Kinds and their properties can be seen with MediaInfo.NET.
 
-Examples
---------
+  ### **-Index**
+> ![Foo](https://img.shields.io/badge/Type-Int32-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-FALSE-Green?) ![Foo](https://img.shields.io/badge/DefaultValue-0-Blue?color=5547a8)\
+Zero based stream number.[-index 0]
 
-Get the artist from a MP3 file.
+  ### **-Parameter**
+> ![Foo](https://img.shields.io/badge/Type-String-Blue?) ![Foo](https://img.shields.io/badge/Mandatory-TRUE-Red?) \
+Name of the property to get.[-param 'Performer'] The property names can be seen with MediaInfo.NET with following setting enabled: Show parameter names as they are used in the MediaInfo API They can also be seen with Get-MediaInfoSummary with the -Raw flag enabled.
 
-```PowerShell
-Get-MediaInfoValue '.\Meg Myers - Desire (Hucci Remix).mp3' -Kind General -Parameter Performer
+ #### EXAMPLE 1
+```powershell
+PS>Get-MediaInfoValue '.\Meg Myers - Desire (Hucci Remix).mp3' -Kind General -Parameter Performer
 
+output:
 Meg Myers
+Get the artist from a MP3 file.
 ```
+ #### EXAMPLE 2
+```powershell
+PS>'.\Meg Myers - Desire (Hucci Remix).mp3' | Get-MediaInfoValue -Kind Audio -Parameter 'Channel(s)'
 
-
+output:
+2
 Get the channel count in a MP3 file. Return types are always strings and if necessary must be cast to integer.
-
-```PowerShell
-'.\Meg Myers - Desire (Hucci Remix).mp3' | Get-MediaInfoValue -Kind Audio -Parameter 'Channel(s)'
-
-2
 ```
+ #### EXAMPLE 3
+```powershell
+PS C:\>Get-MediaInfoValue '.\The Warriors.mkv' -Kind Audio -Index 1 -Parameter 'Language/String'
 
-
-Get the language of the second audio stream in a movie.
-
-The Index parameter is zero based.
-
-```PowerShell
-Get-MediaInfoValue '.\The Warriors.mkv' -Kind Audio -Index 1 -Parameter 'Language/String'
-
+output:
 English
+Get the language of the second audio stream in a movie.
+The Index parameter is zero based.
 ```
+ #### EXAMPLE 4
+```powershell
+PS C:\>Get-MediaInfoValue '.\The Warriors.mkv' -Kind General -Parameter 'TextCount'
 
-
-Get the count of subtitle streams in a movie.
-
-```PowerShell
-Get-MediaInfoValue '.\The Warriors.mkv' -Kind General -Parameter 'TextCount'
-
+output:
 2
+Get the count of subtitle streams in a movie.
 ```
+ #### EXAMPLE 5
+```powershell
+PS C:\>$mi = New-Object MediaInfo -ArgumentList $Path ;
 
-
-Parameters
-----------
-
-**-Path**
-
-Path to a media file.
-
-
-**-Kind** General | Video | Audio | Text | Image | Menu
-
-A MediaInfo kind.
-
-Kinds and their properties can be seen with [MediaInfo.NET](https://github.com/stax76/MediaInfo.NET).
-
-
-**-Index**
-
-Zero based stream number.
-
-
-**-Parameter**
-
-Name of the property to get.
-
-The property names can be seen with [MediaInfo.NET](https://github.com/stax76/MediaInfo.NET) with following setting enabled:
-
-Show parameter names as they are used in the MediaInfo API
-
-They can also be seen with Get-MediaInfoSummary with the -Raw flag enabled.
-
-
-Input
------
-
-Input can be defined with the Path parameter, pipe input supports a path as string or a FileInfo object.
-
-
-Output
-------
-
-Output will always be of type string and must be cast to other types like integer if necessary.
-
-
-Using the .NET class directly for highest performance
------------------------------------------------------
-
+$value1 = $mi.GetInfo($Kind, $Index, $Parameter) ;
+$value2 = $mi.GetInfo($Kind, $Index, $Parameter) ;
+$mi.Dispose() ;
 To retrieve specific properties with highest possible performance the .NET class must be used directly:
-
-```
-$mi = New-Object MediaInfo -ArgumentList $Path
-$value1 = $mi.GetInfo($Kind, $Index, $Parameter)
-$value2 = $mi.GetInfo($Kind, $Index, $Parameter)
-$mi.Dispose()
 ```
 
-Get-MediaInfoSummary
---------------------
-
-Shows a summary in text format for a media file.
-
-```
-NAME
-    Get-MediaInfoSummary
-
-SYNTAX
-    Get-MediaInfoSummary [-Path] <string> [-Full] [-Raw]  [<CommonParameters>]
-
-ALIASES
-    gmis
-```
-
-Description
------------
-
-Shows a summary in text format for a media file.
-
-Examples
---------
-
-```PowerShell
- Get-MediaInfoSummary 'D:\Samples\Downton Abbey.mkv'
-```
-
-Parameters
-----------
-
-**-Path**
-
-Path to a media file. Can also be passed via pipeline.
 
 
-**-Full**
 
-Show a extended summary.
-
-
-**-Raw**
-
-Show not the friendly parameter names but rather the names as they are used in the MediaInfo API.
-
-Parameter names passed to Get-MediaInfoValue -Parameter must use the raw parameter name.
-
-
-Input
------
-
-Path as string to a media file. Can also be passed via pipeline.
-
-
-Output
-------
-
-A summary line by line as string array.
-
-
-Related apps
-------------
-
-Find a list of related apps:
-
-https://stax76.github.io/frankskare
