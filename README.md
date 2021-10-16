@@ -1,6 +1,5 @@
 
-Get-MediaInfo
-=============
+# Get-MediaInfo
 
 Get-MediaInfo is a PowerShell MediaInfo solution.
 
@@ -16,7 +15,7 @@ It consists of three functions:
 ![-](GridView.png)
 
 
-Installation
+## Installation
 ------------
 
 Installation or download via PowerShellGet:
@@ -27,7 +26,7 @@ No build provided for PSGallery. Options:
 - or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
 
 
-# <a name="Get-MediaInfoRAW"></a>Get-MediaInfoRAW
+## <a name="Get-MediaInfoRAW"></a>Get-MediaInfoRAW
 ### SYNOPSIS
 Get-MediaInfoRAW.ps1 - Returns an object reflecting all of the raw 'low-level' MediaInfo properties of a media file.
 ### DESCRIPTION
@@ -62,7 +61,12 @@ PS>$data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ;
 Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
 ```
 
-# <a name="Get-MediaInfoSummary"></a>Get-MediaInfoSummary
+![-](get-mediainfoRAWp1.jpg)
+![-](get-mediainfoRAWp2.jpg)
+![-](get-mediainfoRAWp3.jpg)
+![-](get-mediainfoRAWp4.jpg)
+
+## <a name="Get-MediaInfoSummary"></a>Get-MediaInfoSummary
 ### SYNOPSIS
 Get-MediaInfoSummary.ps1 -  - Shows a summary in text format for a media file.
 ### DESCRIPTION
@@ -92,7 +96,7 @@ PS>Get-MediaInfoSummary 'D:\Samples\Downton Abbey.mkv'
 Output the default Full media summary for the specified video.
 ```
 
-# <a name="Get-MediaInfoValue"></a>Get-MediaInfoValue
+## <a name="Get-MediaInfoValue"></a>Get-MediaInfoValue
 ### SYNOPSIS
 Get-MediaInfoValue.ps1 - Returns specific properties from media files.
 ### DESCRIPTION
@@ -157,4 +161,7 @@ $value2 = $mi.GetInfo($Kind, $Index, $Parameter) ;
 $mi.Dispose() ;
 To retrieve specific properties with highest possible performance the .NET class must be used directly:
 ```
+
+
+
 
