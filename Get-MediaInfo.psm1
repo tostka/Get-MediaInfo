@@ -21,26 +21,33 @@ REVISIONS
 *3.7 7/31/21 - stax76's posted rev
 .DESCRIPTION
 Get-MediaInfo.psm1 - Get-MediaInfo is a PowerShell MediaInfo solution.
-[stax76/Get-MediaInfo: Get-MediaInfo is a PowerShell MediaInfo solution - github.com/](https://github.com/stax76/Get-MediaInfo)
+# Get-MediaInfo
 
 Get-MediaInfo is a PowerShell MediaInfo solution.
 
-It consists of four functions:
+It consists of three functions:
 
--   [Get-MediaInfo](https://github.com/stax76/Get-MediaInfo#get-mediainfo)
--   [Get-MediaInfoRAW](https://github.com/tostka/Get-MediaInfo#get-mediainforaw)
--   [Get-MediaInfoValue](https://github.com/stax76/Get-MediaInfo#get-mediainfovalue)
--   [Get-MediaInfoSummary](https://github.com/tostka/Get-MediaInfo#get-mediainfovalue)
+- [Get-MediaInfo](#get-mediainfo)
+- [Get-MediaInfoValue](#get-mediainfovalue)
+- [Get-MediaInfoSummary](#get-mediainfosummary)
+- [Get-MediaInfoRAW](#get-mediainforaw)
 
-[![-](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/Summary.jpg)](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/Summary.jpg)
+![-](Summary.jpg)
 
-[![-](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/GridView.png)](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/GridView.png)
+![-](GridView.png)
+
 
 ## Installation
+------------
 
 Installation or download via PowerShellGet:
 
-[https://www.powershellgallery.com/packages/Get-MediaInfo](https://www.powershellgallery.com/packages/Get-MediaInfo)
+No build provided for PSGallery. Options:
+- Manually install repo files 
+- Manually install the xxx.nupkg file: [Installing PowerShell scripts from a NuGet package](https://docs.microsoft.com/en-us/powershell/scripting/gallery/how-to/working-with-packages/manual-download?view=powershell-7.1#installing-powershell-scripts-from-a-nuget-package)
+- Copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
+- or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
+
 .LINK
 https://github.com/tostka/verb-XXX
 #>
