@@ -28,12 +28,13 @@ Get-MediaInfo is a PowerShell MediaInfo solution.
 It consists of four functions:
 
 -   [Get-MediaInfo](https://github.com/stax76/Get-MediaInfo#get-mediainfo)
+-   [Get-MediaInfoRAW](https://github.com/tostka/Get-MediaInfo#get-mediainforaw)
 -   [Get-MediaInfoValue](https://github.com/stax76/Get-MediaInfo#get-mediainfovalue)
--   [Get-MediaInfoSummary](https://github.com/stax76/Get-MediaInfo#get-mediainfosummary)
--
-[![-](https://github.com/stax76/Get-MediaInfo/raw/master/Summary.jpg)](https://github.com/stax76/Get-MediaInfo/blob/master/Summary.jpg)
+-   [Get-MediaInfoSummary](https://github.com/tostka/Get-MediaInfo#get-mediainfovalue)
 
-[![-](https://github.com/stax76/Get-MediaInfo/raw/master/GridView.png)](https://github.com/stax76/Get-MediaInfo/blob/master/GridView.png)
+[![-](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/Summary.jpg)](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/Summary.jpg)
+
+[![-](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/GridView.png)](https://raw.githubusercontent.com/tostka/Get-MediaInfo/master/GridView.png)
 
 ## Installation
 

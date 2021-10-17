@@ -21,9 +21,11 @@ It consists of three functions:
 Installation or download via PowerShellGet:
 
 No build provided for PSGallery. Options:
-- manually install repo files 
-- copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
+- Manually install repo files 
+- Manually install the xxx.nupkg file: [Installing PowerShell scripts from a NuGet package](https://docs.microsoft.com/en-us/powershell/scripting/gallery/how-to/working-with-packages/manual-download?view=powershell-7.1#installing-powershell-scripts-from-a-nuget-package)
+- Copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
 - or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
+
 
 
 ## <a name="Get-MediaInfoRAW"></a>Get-MediaInfoRAW
