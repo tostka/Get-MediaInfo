@@ -674,7 +674,7 @@ function Get-MediaInfoRAW
                         #$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
                         $rgxKbps {
                             $TagParsed= 'kbps' ;
-                            $ValueParsed = $matches.kbps.replace(' ','');
+                            $ValueParsed = $matches.kbps.replace(' ','') ;
                         }
                         #$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
                         $rgxFrameRt {
@@ -696,22 +696,54 @@ function Get-MediaInfoRAW
 
                     switch ($region){
                         'General' {
-                            $hGeneral.add($key,$value) ;
-                            if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                $hGeneral.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
-                            } ;
+                            if($hGeneral.keys -contains $key){
+                                write-host "skipping add of second General:$($key) property"
+                            } else { 
+                                $hGeneral.add($key,$value) ;
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
+                                    $keyAlt += "_$($TagParsed)" ; 
+                                    if($hGeneral.keys -contains $keyAlt){
+                                        write-host "skipping add of second General:$($keyAlt) property"
+                                    } else { 
+                                        $hGeneral.add($keyAlt,$ValueParsed) ;
+                                    } ; 
+                                } ;
+                            } ; 
+                            
                         }
                         'Video' {
-                            $hVideo.add($key,$value) ;
-                            if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                $hVideo.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
-                            } ;
+                            if($hVideo.keys -contains $key){
+                                write-host "skipping add of second Video:$($key) property"
+                            } else { 
+                                $hVideo.add($key,$value) ;
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
+                                    $keyAlt += "_$($TagParsed)" ; 
+                                    if($hVideo.keys -contains $keyAlt){
+                                        write-host "skipping add of second Video:$($keyAlt) property"
+                                    } else { 
+                                        $hVideo.add($keyAlt,$ValueParsed) ;
+                                    } ; 
+                                } ;
+                            } ;                             
+                            
                         }
                         'Audio' {
-                            $hAudio.add($key,$value) ;
-                            if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                $hAudio.add("$($key.split('_')[0])_$($TagParsed)",$ValueParsed) ;
-                            } ;
+                            if($hAudio.keys -contains $key){
+                                write-host "skipping add of second Audio:$($key) property"
+                            } else { 
+                                $hAudio.add($key,$value) ;
+                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
+                                    $keyAlt += "_$($TagParsed)" ; 
+                                    if($hAudio.keys -contains $keyAlt){
+                                        write-host "skipping add of second Audio:$($keyAlt) property"
+                                    } else { 
+                                        $hAudio.add($keyAlt,$ValueParsed) ;
+                                    } ;                                 
+                                } ;
+                            } ;                                                            
                         } ;
                     } ; # region
                 }  # key value
@@ -720,16 +752,12 @@ function Get-MediaInfoRAW
     } ;  # PROC-E
     END {
         # hash->object conversion 
-        $oGeneral = New-Object PSObject ;
-        $hGeneral.GetEnumerator() |ForEach-Object { Add-Member -inputObject $oGeneral -memberType NoteProperty -name $_.Name -value $_.Value } ;
+        $oGeneral = [PSCustomObject]$hGeneral ; 
         $hSummary.general += $oGeneral ; 
-        $oVideo = New-Object PSObject ;
-        $hVideo.GetEnumerator() |ForEach-Object { Add-Member -inputObject $oVideo -memberType NoteProperty -name $_.Name -value $_.Value } ;
+        $oVideo = [PSCustomObject]$hVideo ; 
         $hSummary.video += $oVideo ; 
-        $oAudio = New-Object PSObject ;
-        $hAudio.GetEnumerator() |ForEach-Object { Add-Member -inputObject $oAudio -memberType NoteProperty -name $_.Name -value $_.Value } ;
+        $oAudio = [PSCustomObject]$hAudio
         $hSummary.audio += $oAudio; 
-        #write-verbose "Hash created:`n$(($hSummary|out-string).trim())" ;
         New-Object PSObject -Property $hSummary | write-output ;
         
     } ;
