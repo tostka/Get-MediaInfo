@@ -29,6 +29,7 @@ Get-MediaInfoRAW:StorageUnits
 Get-MediaInfoRAW:Decimals
 Get-MediaInfoRAW:fixNames
 Get-MediaInfoRAW:noPostConversion
+Get-MediaInfoRAW:ExportToFile
 Get-MediaInfoRAW:Verbose
 Get-MediaInfoRAW:vb
 Get-MediaInfoRAW:Debug

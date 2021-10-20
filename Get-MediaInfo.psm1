@@ -43,7 +43,7 @@ It consists of three functions:
 Installation or download via PowerShellGet:
 
 No build provided for PSGallery. Options:
-- Manually install repo files 
+- Manually install repo files
 - Manually install the xxx.nupkg file: [Installing PowerShell scripts from a NuGet package](https://docs.microsoft.com/en-us/powershell/scripting/gallery/how-to/working-with-packages/manual-download?view=powershell-7.1#installing-powershell-scripts-from-a-nuget-package)
 - Copy the \Packages\xxx.nupkg to a local share, configured with new-PsRepository, then install via install-module,
 - or use Doug Finke's [Install-ModuleFromGitHub module](https://dfinke.github.io/powershell/2016/11/21/Quickly-Install-PowerShell-Modules-from-GitHub.html) to direct download from the repo and build a local module install.
@@ -550,6 +550,7 @@ function Get-MediaInfoRAW
     AddedWebsite: http://www.toddomation.com
     AddedTwitter: @tostka / http://twitter.com/tostka
     REVISIONS
+    * 10:49 PM 10/19/2021 added -ExportToFile param, subtitle stream code-collecting, sketched in skip exemption for underlying TextSubtitle streams (summarizing's simpler, don't need the details, nor the code to loop and do 43 or more per file). 
     * 2:34 PM 10/16/2021 fixed $rgxTimeMMSS error, properly covers spurious spaces in the strings, expanded same to the $rgxTimeHHMM as well. Stronly [regex] typed the rgxs to force fails immed on load (rather silently went conversions fail and you get blank returns on some properties).
     * 7:44 PM 10/14/2021 added format string parser, adds an extra [property]_[unit] variant for the [property]_string values in the returned object.
     * 3:00 PM 10/9/2021 TK:variant of Get-MediaInfoSummary() that returns the full set of raw MediaInfo.dll properties, as an object.
@@ -561,9 +562,14 @@ function Get-MediaInfoRAW
     Path to a media file. Can also be passed via pipeline.[-Path D:\path-to\video.ext]
     .PARAMETER fixNames
     Switch to replace spaces and forward-slashes in default MediaInfo property names, with underscores (default's True)
+    .PARAMETER ExportToFile
+    Switch to create a matching XML metadata export file (with -Path name/location and .xml ext).[-ExportToFile]
     .EXAMPLE
     PS> $data = Get-MediaInfoRAW 'D:\Samples\Downton Abbey.mkv' ;
     Assign the Raw MediaInfo.dll properties for the specified video, as a System.Object to the $data variable.
+    .EXAMPLE
+    $files|%{"==$($_)" ; if(test-path $_){ get-mediainforaw -path $_ -exporttofile | out-null } } ; 
+    Process an array  of video file paths, and generate output exported -media.xml files for each, (while suppressing echos/returns into out-null). 
     .LINK
     https://github.com/stax76/Get-MediaInfo
     .LINK
@@ -580,16 +586,19 @@ function Get-MediaInfoRAW
         [string] $StorageUnits='MB',
         [Parameter(HelpMessage="Decimal places of rounding(where post-conversion occurs)[-Decimals 2]")]
         [int]$Decimals = 3,
-        [Parameter(,HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores.(default's True).[-fixNames]")]
+        [Parameter(HelpMessage="Switch to replace spaces in default MediaInfo property names, with underscores.(default's True).[-fixNames]")]
         [Switch]$fixNames = $true,
-        [Parameter(,HelpMessage="Switch to disable additional conversion of string metrics to working numerics.[-fixNames]")]
-        [Switch]$noPostConversion
+        [Parameter(HelpMessage="Switch to disable additional conversion of string metrics to working numerics.[-fixNames]")]
+        [Switch]$noPostConversion,
+        [Parameter(HelpMessage="Switch to create a matching XML metadata export file (with -Path name/location and .xml ext).[-ExportToFile]")]
+        [Switch]$ExportToFile
     ) ;
     BEGIN{
         Add-Type -Path ($PSScriptRoot + '\MediaInfoSharp.dll')
 
         [regex]$rgxKeyValue = '(.*)\s+:\s(.*)' ;
         [regex]$rgxRegion = '^(\w*)$' ;
+        [regex]$rgxRegionText = '(Text\s#\d+)'
         [regex]$rgxTimeHHMM = '^(?<Hours>\d+)((\s)*)h\s(?<Minutes>\d+)((\s)*)m((i)*)n$'
         [regex]$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
         [regex]$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
@@ -601,6 +610,7 @@ function Get-MediaInfoRAW
 
     }
     PROCESS{
+        $Path = (Convert-Path -LiteralPath $Path) ; 
         $mi = New-Object MediaInfoSharp -ArgumentList (Convert-Path -LiteralPath $Path) ;
         $value = $mi.GetSummary($false, $true) ;
         $mi.Dispose() ;
@@ -609,26 +619,27 @@ function Get-MediaInfoRAW
             General  = @();
             Video  = @();
             Audio  = @();
+            SubtitleLanguagesInternal = @() ; 
         } ;
         $hGeneral = [ordered]@{};
         $hVideo = [ordered]@{};
         $hAudio = [ordered]@{};
-        
+
         $lines = $value.Split([Environment]::NewLine) | ?{$_.Length -gt 0} ;
 
-        $regions = ($lines |?{$_.Length -gt 0})  -match $rgxRegion ; 
+        $regions = ($lines |?{$_.Length -gt 0})  -match $rgxRegion ;
         # this code only supports a single stream per type, so test & warn:
         if(($regions | group | select -expand count) |?{$_ -gt 1}){
-            $smsg = "$($Path)`ncontains more than a single 'stream' of 'General','Video' or 'Audio' type:`n$(($regions|out-string).trim())" ; 
+            $smsg = "$($Path)`ncontains more than a single 'stream' of 'General','Video' or 'Audio' type:`n$(($regions|out-string).trim())" ;
             $smsg += "`nthe Get-MediaInfoRAW cmdlet does *not* support multi-stream files" ;
-            $smsg += "`n(please try Get-MediaInfo, Get-MediaInfoSummary, or Get-MediaInfoValue)" ; 
-            Write-Warning $smsg 
-            break ; 
-        } 
+            $smsg += "`n(please try Get-MediaInfo, Get-MediaInfoSummary, or Get-MediaInfoValue)" ;
+            Write-Warning $smsg
+            break ;
+        }
 
         $nGeneral= 0 ;
-        $nVideo = 0 ; 
-        $nAudio = 0 ;                 
+        $nVideo = 0 ;
+        $nAudio = 0 ;
         foreach($line in $lines){
             $TagParsed= $ValueParsed = $null ;
             switch -Regex ($line){
@@ -636,130 +647,166 @@ function Get-MediaInfoRAW
                     $region = $matches[0] ;
                     write-verbose "(region:$($region))" ;
                     switch ($region){
-                        'General'{$nGeneral++ } 
+                        'General'{$nGeneral++ }
                         'Video' {$nVideo++ }
-                        'Audio' {$nAudio++ } ; 
+                        'Audio' {$nAudio++ } ;
                     } ;
-                }; 
+                };
+                $rgxRegionText { # subtitle streams
+                    # unimplemented, set to skip
+                    $region = 'SKIP' ;
+                    write-verbose "(Skipping Text/Subtitle):region:$($region))" ;
+                    <#$region = $nrname = $matches[0].replace(' ','_') ;
+                    write-verbose "(region:$($region))" ;
+                    $nText++ ;
+                    #>
+                    Break ;
+                } ;
                 $rgxKeyValue {
-                    $key,$value = ($line-split $rgxKeyValue).Trim()|?{$_} ;
-                    if($fixNames){
-                        # sub out 'challenging' property name values with alts: \s, /, (, ), *
-                        $key= $key -replace '(\s|\/)','_' -replace '(\(|\))','_'  -replace '\*','x'
-                    } ;
-                    # parse and convert fields for which we have format matches
-                    switch -regex ($value){
-                        #$rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$' ;
-                        $rgxFileSizeBinary  {
-                            $TagParsed = 'MB' ; # $matches.unit ; # no we're using common mb units
-                            $ValueParsed  = $value | _convert-BinaryToDecimalStorageUnits -To $StorageUnits -Decimals $Decimal ;
-                        }
-                        #$rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
-                        $rgxTimeHHMM {
-                            $ts = New-TimeSpan -Hours $matches.Hours -Minutes $matches.Minutes ;
-                            $TagParsed= 'Mins' ;
-                            $ValueParsed = $ts.TotalMinutes ;
-                        }
-                        #$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
-                        $rgxTimeMMSS {
-                            $ts = New-TimeSpan -Minutes $matches.Minutes -Seconds $matches.Seconds ;
-                            $TagParsed= 'Mins' ;
-                            $ValueParsed = $ts.TotalMinutes ;
-                        }
-                        #$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
-                        $rgxDimensionPixels {
-                            $TagParsed= 'Pixels' ;
-                            $ValueParsed = $matches.pixels.replace(' ','') ;
-                        }
-                        #$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
-                        $rgxKbps {
-                            $TagParsed= 'kbps' ;
-                            $ValueParsed = $matches.kbps.replace(' ','') ;
-                        }
-                        #$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
-                        $rgxFrameRt {
-                            $TagParsed= 'fps' ;
-                            $ValueParsed = $matches.framerate.replace(' ','') ;
-                        }
-                        #$rgxBit = '^(?<bit>.*)\sbit$';
-                        $rgxBit {
-                            $TagParsed= 'bit' ;
-                            $ValueParsed = $matches.bit.replace(' ','') ;
-                        }
-                        #$rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
-                        $rgxKHz {
-                            $TagParsed= 'bit' ;
-                            $ValueParsed = $matches.khz.replace(' ','') ;
-                        }
-                        default{write-verbose "(unable to match `$value:$($value) to a parsable format" }
-                    } # value parse
-
-                    switch ($region){
-                        'General' {
-                            if($hGeneral.keys -contains $key){
-                                write-host "skipping add of second General:$($key) property"
-                            } else { 
-                                $hGeneral.add($key,$value) ;
-                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
-                                    $keyAlt += "_$($TagParsed)" ; 
-                                    if($hGeneral.keys -contains $keyAlt){
-                                        write-host "skipping add of second General:$($keyAlt) property"
-                                    } else { 
-                                        $hGeneral.add($keyAlt,$ValueParsed) ;
-                                    } ; 
-                                } ;
-                            } ; 
-                            
-                        }
-                        'Video' {
-                            if($hVideo.keys -contains $key){
-                                write-host "skipping add of second Video:$($key) property"
-                            } else { 
-                                $hVideo.add($key,$value) ;
-                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
-                                    $keyAlt += "_$($TagParsed)" ; 
-                                    if($hVideo.keys -contains $keyAlt){
-                                        write-host "skipping add of second Video:$($keyAlt) property"
-                                    } else { 
-                                        $hVideo.add($keyAlt,$ValueParsed) ;
-                                    } ; 
-                                } ;
-                            } ;                             
-                            
-                        }
-                        'Audio' {
-                            if($hAudio.keys -contains $key){
-                                write-host "skipping add of second Audio:$($key) property"
-                            } else { 
-                                $hAudio.add($key,$value) ;
-                                if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
-                                    $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
-                                    $keyAlt += "_$($TagParsed)" ; 
-                                    if($hAudio.keys -contains $keyAlt){
-                                        write-host "skipping add of second Audio:$($keyAlt) property"
-                                    } else { 
-                                        $hAudio.add($keyAlt,$ValueParsed) ;
-                                    } ;                                 
-                                } ;
-                            } ;                                                            
+                    if(-not ($region -eq 'SKIP')){
+                        $key,$value = ($line-split $rgxKeyValue).Trim()|?{$_} ;
+                        if($fixNames){
+                            # sub out 'challenging' property name values with alts: \s, /, (, ), *
+                            $key= $key -replace '(\s|\/)','_' -replace '(\(|\))','_'  -replace '\*','x'
                         } ;
-                    } ; # region
+                        # parse and convert fields for which we have format matches
+                        switch -regex ($value){
+                            #$rgxFileSizeBinary = '^(?<size>.*)\s(?<unit>((P|T|G|M|K)iB)|Bytes)$' ;
+                            $rgxFileSizeBinary  {
+                                $TagParsed = 'MB' ; # $matches.unit ; # no we're using common mb units
+                                $ValueParsed  = $value | _convert-BinaryToDecimalStorageUnits -To $StorageUnits -Decimals $Decimal ;
+                            }
+                            #$rgxTimeHHMM = '^(?<Hours>\d+)h\s(?<Minutes>\d+)mn$' ; # 1h 37mn
+                            $rgxTimeHHMM {
+                                $ts = New-TimeSpan -Hours $matches.Hours -Minutes $matches.Minutes ;
+                                $TagParsed= 'Mins' ;
+                                $ValueParsed = $ts.TotalMinutes ;
+                            }
+                            #$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
+                            $rgxTimeMMSS {
+                                $ts = New-TimeSpan -Minutes $matches.Minutes -Seconds $matches.Seconds ;
+                                $TagParsed= 'Mins' ;
+                                $ValueParsed = $ts.TotalMinutes ;
+                            }
+                            #$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
+                            $rgxDimensionPixels {
+                                $TagParsed= 'Pixels' ;
+                                $ValueParsed = $matches.pixels.replace(' ','') ;
+                            }
+                            #$rgxKbps = '^(?<kbps>.*)\skb(/|p)s$' ;  # 2731 Kbps or 3 729 kb/s
+                            $rgxKbps {
+                                $TagParsed= 'kbps' ;
+                                $ValueParsed = $matches.kbps.replace(' ','') ;
+                            }
+                            #$rgxFrameRt = '^(?<framerate>.*)\sfps$' ; # 24.000 fps
+                            $rgxFrameRt {
+                                $TagParsed= 'fps' ;
+                                $ValueParsed = $matches.framerate.replace(' ','') ;
+                            }
+                            #$rgxBit = '^(?<bit>.*)\sbit$';
+                            $rgxBit {
+                                $TagParsed= 'bit' ;
+                                $ValueParsed = $matches.bit.replace(' ','') ;
+                            }
+                            #$rgxKHz = '^(?<khz>.*)\sKHz$'; # SamplingRate_String            48.0 KHz
+                            $rgxKHz {
+                                $TagParsed= 'bit' ;
+                                $ValueParsed = $matches.khz.replace(' ','') ;
+                            }
+                            default{write-verbose "(unable to match `$value:$($value) to a parsable format" }
+                        } # value parse
+
+                        switch ($region){
+                            'General' {
+                                if($hGeneral.keys -contains $key){
+                                    write-host "skipping add of second General:$($key) property"
+                                } else {
+                                    $hGeneral.add($key,$value) ;
+                                    if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                        $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
+                                        $keyAlt += "_$($TagParsed)" ;
+                                        if($hGeneral.keys -contains $keyAlt){
+                                            write-host "skipping add of second General:$($keyAlt) property"
+                                        } else {
+                                            $hGeneral.add($keyAlt,$ValueParsed) ;
+                                        } ;
+                                    } ;
+                                } ;
+
+                            }
+                            'Video' {
+                                if($hVideo.keys -contains $key){
+                                    write-host "skipping add of second Video:$($key) property"
+                                } else {
+                                    $hVideo.add($key,$value) ;
+                                    if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                        $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
+                                        $keyAlt += "_$($TagParsed)" ;
+                                        if($hVideo.keys -contains $keyAlt){
+                                            write-host "skipping add of second Video:$($keyAlt) property"
+                                        } else {
+                                            $hVideo.add($keyAlt,$ValueParsed) ;
+                                        } ;
+                                    } ;
+                                } ;
+
+                            }
+                            'Audio' {
+                                if($hAudio.keys -contains $key){
+                                    write-host "skipping add of second Audio:$($key) property"
+                                } else {
+                                    $hAudio.add($key,$value) ;
+                                    if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                        $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
+                                        $keyAlt += "_$($TagParsed)" ;
+                                        if($hAudio.keys -contains $keyAlt){
+                                            write-host "skipping add of second Audio:$($keyAlt) property"
+                                        } else {
+                                            $hAudio.add($keyAlt,$ValueParsed) ;
+                                        } ;
+                                    } ;
+                                } ;
+                            } ;
+                        } ; # region
+                    } else {
+                        write-verbose "(skipping region:SKIP)";
+                    } ;
                 }  # key value
+
             } ; # switch line
         }  # loop-E ;
     } ;  # PROC-E
     END {
-        # hash->object conversion 
-        $oGeneral = [PSCustomObject]$hGeneral ; 
-        $hSummary.general += $oGeneral ; 
-        $oVideo = [PSCustomObject]$hVideo ; 
-        $hSummary.video += $oVideo ; 
+        # hash->object conversion
+        $oGeneral = [PSCustomObject]$hGeneral ;
+        $hSummary.general += $oGeneral ;
+        $oVideo = [PSCustomObject]$hVideo ;
+        $hSummary.video += $oVideo ;
         $oAudio = [PSCustomObject]$hAudio
-        $hSummary.audio += $oAudio; 
-        New-Object PSObject -Property $hSummary | write-output ;
-        
+        $hSummary.audio += $oAudio;
+        # parse and add subtitles lang codes summary
+        if($sno = ($lines | sls '^Text\s#1$').Linenumber){ # find 1st 'Text #1' stream to find start of subttls
+            $langs = (($lines[($sno)..($lines.count)]| ?{$_ -match  '^Language/String\s+:\s(\w{2})$'}) -replace 'Language/String\s+:','').trim() | select -unique;
+            $slangs = @() ; 
+            $slangs += $langs|?{$_ -eq 'en'} ; # sort en up front
+            $slangs += ($langs|?{$_ -ne 'en'} | sort) # and the rest alpha
+            # -unique we're loosing sub variants, but we only want the codes anyway. 
+            $hsummary.SubtitleLanguagesInternal = $slangs -join ',' ; 
+        } 
+        # check for multiple 'Audio' streams
+        if(($lines|?{$_ -match '^Audio$'} | measure).count -gt 1){
+            write-host -foregroundcolor yellow "NOTE:File *appears* to have *multiple* Audio Streams!" ; 
+        } ; 
+        $oObj = New-Object PSObject -Property $hSummary ;
+        if ($ExportToFile){
+            $file = gci $path ; 
+            $ofile = $file.fullname.replace($file.Extension,'-media.xml') ;
+            write-host "(writing metadata to matching -media.XML file)" ;
+            write-verbose "$($ofile)"
+            $oObj | Export-Clixml -path $ofile -Encoding UTF8 -Force;
+        } ;
+        $oObj | write-output ;
+
     } ;
 } ;
 #*------^ END Function Get-MediaInfoRAW  ^------
