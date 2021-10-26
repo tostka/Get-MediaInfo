@@ -598,7 +598,9 @@ function Get-MediaInfoRAW
 
         [regex]$rgxKeyValue = '(.*)\s+:\s(.*)' ;
         [regex]$rgxRegion = '^(\w*)$' ;
-        [regex]$rgxRegionText = '(Text\s#\d+)'
+        #[regex]$rgxRegionText = '(Text\s#\d+)'
+        # expand to cover the range of non-AVG Kind's in MediaInfo.dll: Text|Image|Menu - projecting Img/Mnu string, against pattern used in Text (haven't run across file w the added streams yet)
+        [regex]$rgxRegionUnparsed = '((Text|Image|Menu)\s#\d+)'
         [regex]$rgxTimeHHMM = '^(?<Hours>\d+)((\s)*)h\s(?<Minutes>\d+)((\s)*)m((i)*)n$'
         [regex]$rgxTimeMMSS = '^(?<Minutes>\d+)((\s)*)m((i)*)n\s(?<Seconds>\d+)((\s)*)s$' # '25mn 53s', '21 min 38 s'
         [regex]$rgxDimensionPixels = '^(?<pixels>.*)\spixel((s)*)$' ; # 1 080 pixel
@@ -626,7 +628,6 @@ function Get-MediaInfoRAW
         $hAudio = [ordered]@{};
 
         $lines = $value.Split([Environment]::NewLine) | ?{$_.Length -gt 0} ;
-
         $regions = ($lines |?{$_.Length -gt 0})  -match $rgxRegion ;
         # this code only supports a single stream per type, so test & warn:
         if(($regions | group | select -expand count) |?{$_ -gt 1}){
@@ -634,7 +635,7 @@ function Get-MediaInfoRAW
             $smsg += "`nthe Get-MediaInfoRAW cmdlet does *not* support multi-stream files" ;
             $smsg += "`n(please try Get-MediaInfo, Get-MediaInfoSummary, or Get-MediaInfoValue)" ;
             Write-Warning $smsg
-            break ;
+            #break ;
         }
 
         $nGeneral= 0 ;
@@ -652,11 +653,12 @@ function Get-MediaInfoRAW
                         'Audio' {$nAudio++ } ;
                     } ;
                 };
-                $rgxRegionText { # subtitle streams
+                $rgxRegionUnparsed { # Text(subtitle);Image;Menu streams
                     # unimplemented, set to skip
                     $region = 'SKIP' ;
-                    write-verbose "(Skipping Text/Subtitle):region:$($region))" ;
-                    <#$region = $nrname = $matches[0].replace(' ','_') ;
+                    write-verbose "(Skipping Text/Image/Menu streams):region:$($region))" ;
+                    <# unfinished code for generic openended stream increment
+                    $region = $nrname = $matches[0].replace(' ','_') ;
                     write-verbose "(region:$($region))" ;
                     $nText++ ;
                     #>
@@ -719,14 +721,14 @@ function Get-MediaInfoRAW
                         switch ($region){
                             'General' {
                                 if($hGeneral.keys -contains $key){
-                                    write-host "skipping add of second General:$($key) property"
+                                    write-host "skipping add of second $(region):$($key) property"
                                 } else {
                                     $hGeneral.add($key,$value) ;
                                     if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
                                         $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
                                         $keyAlt += "_$($TagParsed)" ;
                                         if($hGeneral.keys -contains $keyAlt){
-                                            write-host "skipping add of second General:$($keyAlt) property"
+                                            write-host "skipping add of second $(region):$($keyAlt) property"
                                         } else {
                                             $hGeneral.add($keyAlt,$ValueParsed) ;
                                         } ;
@@ -736,14 +738,14 @@ function Get-MediaInfoRAW
                             }
                             'Video' {
                                 if($hVideo.keys -contains $key){
-                                    write-host "skipping add of second Video:$($key) property"
+                                    write-host "skipping add of second $($region):$($key) property"
                                 } else {
                                     $hVideo.add($key,$value) ;
                                     if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
                                         $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
                                         $keyAlt += "_$($TagParsed)" ;
                                         if($hVideo.keys -contains $keyAlt){
-                                            write-host "skipping add of second Video:$($keyAlt) property"
+                                            write-host "skipping add of second $(region):$($keyAlt) property"
                                         } else {
                                             $hVideo.add($keyAlt,$ValueParsed) ;
                                         } ;
@@ -753,20 +755,47 @@ function Get-MediaInfoRAW
                             }
                             'Audio' {
                                 if($hAudio.keys -contains $key){
-                                    write-host "skipping add of second Audio:$($key) property"
+                                    write-host "skipping add of second $($region):$($key) property" ;
                                 } else {
                                     $hAudio.add($key,$value) ;
                                     if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
                                         $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ;
                                         $keyAlt += "_$($TagParsed)" ;
                                         if($hAudio.keys -contains $keyAlt){
-                                            write-host "skipping add of second Audio:$($keyAlt) property"
+                                            write-host "skipping add of second $(region):$($keyAlt) property"
                                         } else {
                                             $hAudio.add($keyAlt,$ValueParsed) ;
                                         } ;
                                     } ;
                                 } ;
                             } ;
+
+                            <# # future: could convert this whole swblock to single fully generic pass, with set/get/new-variable code for any stream type.
+                            # text (subtitle) regions
+                            '^Text_#\d+$'{
+                                #$dummyhash = [ordered]@{};               
+                                if($hsummary.keys -notcontains $nrname){
+                                    $hsummary.add($nrname,@()) ; # add hSummary leaf array
+                                    new-variable -name "h$($nrname)" -value $dummyhash ; # value in the dummy ordered hash as the new hash
+                                } else {
+                                    write-verbose "(existing h$($nrname) hash present)" ; 
+                                } 
+                                if((gv "h$nrname").value.keys -contains $key){
+                                    write-host "skipping add of second $($nrname):$($key) property"
+                                } else { 
+                                    (gv "h$nrname").value.add($key,$value) ;
+                                    if($TagParsed -AND $ValueParsed -AND -not$noPostConversion){
+                                        $keyAlt = ($key.split('_') | select -SkipLast 1) -join '_' ; 
+                                        $keyAlt += "_$($TagParsed)" ; 
+                                        if((gv "h$nrname").value.keys -contains $keyAlt){
+                                            write-host "skipping add of second $($region):$($keyAlt) property"
+                                        } else { 
+                                            (gv "h$nrname").value.add($keyAlt,$ValueParsed) ;
+                                        } ;                                 
+                                    } ;
+                                } ;  
+                            } ;
+                            #>
                         } ; # region
                     } else {
                         write-verbose "(skipping region:SKIP)";
@@ -793,9 +822,9 @@ function Get-MediaInfoRAW
             # -unique we're loosing sub variants, but we only want the codes anyway. 
             $hsummary.SubtitleLanguagesInternal = $slangs -join ',' ; 
         } 
-        # check for multiple 'Audio' streams
+        # check for multiple 'Audio' streams - wo coding full A/V stream arrays support.
         if(($lines|?{$_ -match '^Audio$'} | measure).count -gt 1){
-            write-host -foregroundcolor yellow "NOTE:File *appears* to have *multiple* Audio Streams!" ; 
+            write-host -foregroundcolor yellow "NOTE:File *appears* to have *multiple* 'Audio' Streams!" ; 
         } ; 
         $oObj = New-Object PSObject -Property $hSummary ;
         if ($ExportToFile){
