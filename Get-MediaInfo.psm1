@@ -654,7 +654,7 @@ function Get-MediaInfoRAW
                     } ;
                 };
                 $rgxRegionUnparsed { # Text(subtitle);Image;Menu streams
-                    # unimplemented, set to skip
+                    # unimplemented, set to skip instead
                     $region = 'SKIP' ;
                     write-verbose "(Skipping Text/Image/Menu streams):region:$($region))" ;
                     <# unfinished code for generic openended stream increment
