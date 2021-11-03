@@ -550,6 +550,7 @@ function Get-MediaInfoRAW
     AddedWebsite: http://www.toddomation.com
     AddedTwitter: @tostka / http://twitter.com/tostka
     REVISIONS
+    * 8:42 PM 11/2/2021 flipped gci to -literalpath (work around [] wildcard issues using -path)
     * 10:49 PM 10/19/2021 added -ExportToFile param, subtitle stream code-collecting, sketched in skip exemption for underlying TextSubtitle streams (summarizing's simpler, don't need the details, nor the code to loop and do 43 or more per file). 
     * 2:34 PM 10/16/2021 fixed $rgxTimeMMSS error, properly covers spurious spaces in the strings, expanded same to the $rgxTimeHHMM as well. Stronly [regex] typed the rgxs to force fails immed on load (rather silently went conversions fail and you get blank returns on some properties).
     * 7:44 PM 10/14/2021 added format string parser, adds an extra [property]_[unit] variant for the [property]_string values in the returned object.
@@ -828,7 +829,7 @@ function Get-MediaInfoRAW
         } ; 
         $oObj = New-Object PSObject -Property $hSummary ;
         if ($ExportToFile){
-            $file = gci $path ; 
+            $file = gci -literalpath $path ; 
             $ofile = $file.fullname.replace($file.Extension,'-media.xml') ;
             write-host "(writing metadata to matching -media.XML file)" ;
             write-verbose "$($ofile)"
