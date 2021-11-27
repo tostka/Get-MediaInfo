@@ -550,6 +550,7 @@ function Get-MediaInfoRAW
     AddedWebsite: http://www.toddomation.com
     AddedTwitter: @tostka / http://twitter.com/tostka
     REVISIONS
+    * 11:13 AM 11/27/2021 added trycatch to lang parse fail (supporess error)
     * 7:37 PM 11/12/2021 flip $path param test-path to use -literalpath - too many square brackets in sources; same on export-clixml ; 
     * 8:42 PM 11/2/2021 flipped gci to -literalpath (work around [] wildcard issues using -path)
     * 10:49 PM 10/19/2021 added -ExportToFile param, subtitle stream code-collecting, sketched in skip exemption for underlying TextSubtitle streams (summarizing's simpler, don't need the details, nor the code to loop and do 43 or more per file). 
@@ -817,12 +818,17 @@ function Get-MediaInfoRAW
         $hSummary.audio += $oAudio;
         # parse and add subtitles lang codes summary
         if($sno = ($lines | sls '^Text\s#1$').Linenumber){ # find 1st 'Text #1' stream to find start of subttls
-            $langs = (($lines[($sno)..($lines.count)]| ?{$_ -match  '^Language/String\s+:\s(\w{2})$'}) -replace 'Language/String\s+:','').trim() | select -unique;
-            $slangs = @() ; 
-            $slangs += $langs|?{$_ -eq 'en'} ; # sort en up front
-            $slangs += ($langs|?{$_ -ne 'en'} | sort) # and the rest alpha
-            # -unique we're loosing sub variants, but we only want the codes anyway. 
-            $hsummary.SubtitleLanguagesInternal = $slangs -join ',' ; 
+            TRY{
+                # suppress lang parse err
+                $langs = (($lines[($sno)..($lines.count)]| ?{$_ -match  '^Language/String\s+:\s(\w{2})$'}) -replace 'Language/String\s+:','').trim() | select -unique;            
+                $slangs = @() ; 
+                $slangs += $langs|?{$_ -eq 'en'} ; # sort en up front
+                $slangs += ($langs|?{$_ -ne 'en'} | sort) # and the rest alpha
+                # -unique we're loosing sub variants, but we only want the codes anyway. 
+                $hsummary.SubtitleLanguagesInternal = $slangs -join ',' ; 
+            } CATCH{
+                write-verbose "(failed lang extraction)" ; 
+            } 
         } 
         # check for multiple 'Audio' streams - wo coding full A/V stream arrays support.
         if(($lines|?{$_ -match '^Audio$'} | measure).count -gt 1){
